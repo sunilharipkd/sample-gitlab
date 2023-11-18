@@ -1,0 +1,45 @@
+#Define the stages inside this block
+#stages section
+stages:
+  - branching
+  - childcall
+  - triggers
+
+#This defines the jobs that would run in the CICD
+#This job would run when the commit is made in the main branch and restrict its trigger when there is a tag or MR.
+
+branching-job:
+  stage: branching
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"' #would run if the commit is based on a branch
+    - if: '$CI_COMMIT_TAG || $CI_MERGE_REQUEST'
+      when: never   # this means that it would never run in a commit tag or merge request event
+  script:
+    -  echo "Job triggered based on branch commits"
+
+#Child trigger when there is a change in that specific folder.
+#use trigger keyword and explicitly specify the yml file.
+#the child yml file would execute based on the stages mentioned in the child .gitlab-ci.yml file
+trigger-child1:
+  stage: childcall
+  trigger:
+    include: child1/.gitlab-ci.yml
+    strategy: depend
+  rules:
+    - changes:
+        paths:
+        - child1/*
+    - if: '$CI_COMMIT_TAG || $CI_MERGE_REQUEST'
+      when: never
+
+trigger-child2:
+  stage: childcall
+  trigger:
+    include: child2/.gitlab-ci.yml
+    strategy: depend
+  rules:
+    - changes:
+        paths:
+        - child2/*
+    - if: '$CI_COMMIT_TAG || $CI_MERGE_REQUEST'
+      when: never
